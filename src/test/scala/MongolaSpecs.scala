@@ -14,7 +14,7 @@ class Mongola extends SpecificationWithJUnit {
   */
 
   "MongoDB" should {
-    "execute db.hemmen.find command" in {
+    "execute db.ads.find command" in {
       val db = DyDB("hemmen")
        val result = db.ads.find()
       while(result.hasNext){
