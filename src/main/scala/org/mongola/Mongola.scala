@@ -46,7 +46,12 @@ class DyObject(val dbo:DBObject) extends MongolaDynamic {
     v match {
       case s:String => new DyString(s)
       case o:DBObject => args(0) match {
-        case i:Int => new DyObject(o.get(i.toString).asInstanceOf[DBObject])
+        case i:Int => val  iv = o.get(i.toString)
+          iv match {
+            case o:DBObject => new DyObject(o)
+            case d:java.lang.Double => new DyString(d.toString)
+            case _ => new DyString(iv.toString)
+          }
         case _ => new DyObject(o)
       }
     }

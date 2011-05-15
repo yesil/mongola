@@ -19,8 +19,7 @@ class Mongola extends SpecificationWithJUnit {
        val result = db.ads.find()
       while(result.hasNext){
         val item = result.next
-        println(item.name)
-        println(item.location(1))
+        println("%s %s,%s".format(item.name, item.location(0),item.location(0)))
       }
       true must beTrue
     }
