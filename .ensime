@@ -2,7 +2,7 @@
 
 (
 
-:project-package "com.hemmen"
+:project-package "org.mongola"
 
 :use-sbt t
 
