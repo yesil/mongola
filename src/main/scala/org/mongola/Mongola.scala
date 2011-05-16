@@ -10,10 +10,12 @@ import com.mongodb.{DBObject, DBCursor, DBCollection, Mongo}
  * To change this template use File | Settings | File Templates.
  */
 
-trait MongolaDynamic extends Dynamic  {
+
+trait MongolaDynamic extends AnyRef with Dynamic  {
   def applyDynamic(method:String)(args:Any*):MongolaDynamic = throw new Exception(method + " must be implemented !")
   def hasNext = false
   def next:MongolaDynamic = null
+  def isEmpty = true
 }
 
 class DyDB(val db:String)(val m:Mongo = new Mongo()) extends MongolaDynamic {
@@ -28,7 +30,8 @@ object DyDB {
   def apply(db:String) = new DyDB(db)(new Mongo)
 }
 
-class DyCollection(val col:DBCollection) extends MongolaDynamic  {
+class DyCollection(val col:DBCollection) extends AnyRef with MongolaDynamic  {
+  override def isEmpty = col.getCount() == 0
   override def applyDynamic(method:String)(args:Any*):MongolaDynamic = method match {
     case "find" => args match {
       case _=> new DyCursor(col.find())
@@ -37,6 +40,10 @@ class DyCollection(val col:DBCollection) extends MongolaDynamic  {
 }
 
 class DyString(val v:String) extends MongolaDynamic {
+ override def toString = v.toString
+}
+
+class DyDouble(val v:String) extends MongolaDynamic {
  override def toString = v.toString
 }
 
@@ -61,4 +68,5 @@ class DyObject(val dbo:DBObject) extends MongolaDynamic {
 class DyCursor(val cur:DBCursor) extends MongolaDynamic with Iterator[DyObject] {
   override def hasNext = cur.hasNext
   override def next = new DyObject(cur.next)
+  override def isEmpty = super.isEmpty
 }

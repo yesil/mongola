@@ -3,7 +3,9 @@ import org.mongola._
 import com.mongodb.DBCursor
 
 class Mongola extends SpecificationWithJUnit {
-/*
+  lazy val db = DyDB("mongola")
+  implicit def Value2Double(str: MongolaDynamic) = 10d
+  /*
   "MongoDB" should {
     "connect" ! {
       val m = new Mongo()
@@ -13,15 +15,19 @@ class Mongola extends SpecificationWithJUnit {
   }
   */
 
-  "MongoDB" should {
-    "execute db.ads.find command" in {
-      val db = DyDB("hemmen")
-       val result = db.ads.find()
-      while(result.hasNext){
+  "Mongola" should {
+    "execute db.users.find()" in {
+      val result = db.users.find()
+      while (result.hasNext) {
         val item = result.next
-        println("%s %s,%s".format(item.name, item.location(0),item.location(0)))
+        println("%s %d,%d".format(item.last_name, item.location(0), item.location(0)))
       }
-      true must beTrue
+      result must not be empty
+    }
+
+    "execute db.users.find({'last_name': 'Smith'}) with scala Map" in {
+      val result = db.users.find(Map("last_name" -> "Smith"))
+      result must not be empty
     }
   }
 }
