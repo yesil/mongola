@@ -1,6 +1,7 @@
 package org.mongola
 
-import com.mongodb.{DBObject, DBCursor, DBCollection, Mongo}
+import com.mongodb.Mongo
+
 
 /**
  * Created by IntelliJ IDEA.
@@ -11,62 +12,64 @@ import com.mongodb.{DBObject, DBCursor, DBCollection, Mongo}
  */
 
 
-trait MongolaDynamic extends AnyRef with Dynamic  {
-  def applyDynamic(method:String)(args:Any*):MongolaDynamic = throw new Exception(method + " must be implemented !")
-  def hasNext = false
-  def next:MongolaDynamic = null
-  def isEmpty = true
+trait MongolaDynamic extends Dynamic {
+  def hasNext: Boolean
+
+  def next: DBObject
+
+  def isEmpty: Boolean
 }
 
-class DyDB(val db:String)(val m:Mongo = new Mongo()) extends MongolaDynamic {
+class DB(val db: String)(val m: Mongo = new Mongo()) extends Dynamic {
   lazy val database = m.getDB(db)
-  override def applyDynamic(method:String)(args:Any*):MongolaDynamic =
+
+  def applyDynamic(method: String)(args: Any*) =
     method match {
-    case _ => new DyCollection(database.getCollection(method))
-  }
+      case _ => new DBCollection(database.getCollection(method))
+    }
 }
 
-object DyDB {
-  def apply(db:String) = new DyDB(db)(new Mongo)
+object DB {
+  def apply(db: String) = new DB(db)(new Mongo)
 }
 
-class DyCollection(val col:DBCollection) extends AnyRef with MongolaDynamic  {
-  override def isEmpty = col.getCount() == 0
-  override def applyDynamic(method:String)(args:Any*):MongolaDynamic = method match {
+class DBCollection(val underlying: com.mongodb.DBCollection) extends Dynamic {
+
+  def applyDynamic(method: String)(args: Any*): MongolaDynamic = method match {
     case "find" => args match {
-      case _=> new DyCursor(col.find())
+      case _ => new DBCursor(underlying.find())
     }
   }
 }
 
-class DyString(val v:String) extends MongolaDynamic {
- override def toString = v.toString
-}
 
-class DyDouble(val v:String) extends MongolaDynamic {
- override def toString = v.toString
-}
+class DBObject(val underlying: Any) extends Dynamic {
+  override def toString = underlying.toString
 
-class DyObject(val dbo:DBObject) extends MongolaDynamic {
-  override def applyDynamic(method:String)(args:Any*):MongolaDynamic = {
-    val v = dbo.get(method)
-    v match {
-      case s:String => new DyString(s)
-      case o:DBObject => args(0) match {
-        case i:Int => val  iv = o.get(i.toString)
-          iv match {
-            case o:DBObject => new DyObject(o)
-            case d:java.lang.Double => new DyString(d.toString)
-            case _ => new DyString(iv.toString)
+  def applyDynamic(method: String)(args: Any*): DBObject = {
+    underlying match {
+      case o: com.mongodb.DBObject =>
+        val v = o.get(method)
+        v match {
+          case s: String => new DBObject(s)
+          case o: com.mongodb.DBObject => args(0) match {
+            case i: Int => val iv = o.get(i.toString)
+            iv match {
+              case o: com.mongodb.DBObject => new DBObject(o)
+              case _ => new DBObject(iv)
+            }
+            case _ => new DBObject(o)
           }
-        case _ => new DyObject(o)
-      }
+        }
+      case _ => this
     }
   }
 }
 
-class DyCursor(val cur:DBCursor) extends MongolaDynamic with Iterator[DyObject] {
-  override def hasNext = cur.hasNext
-  override def next = new DyObject(cur.next)
-  override def isEmpty = super.isEmpty
+class DBCursor(val underlying: com.mongodb.DBCursor) extends Iterator[DBObject] with MongolaDynamic {
+  override def hasNext = underlying.hasNext()
+
+  override def next = new DBObject(underlying.next())
+
+  override def isEmpty = underlying.count() == 0
 }
