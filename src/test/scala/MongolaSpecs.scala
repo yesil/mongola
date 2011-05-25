@@ -4,33 +4,8 @@ import org.mongola._
 class Mongola extends SpecificationWithJUnit {
 
   "Mongola" should {
-
-    val json = """
-/** users indexes **/
-db.getCollection("users").ensureIndex({
-  "_id": 1
-},[
-
-]);
-
-/** users records **/
-db.getCollection("users").insert({
-  "_id": ObjectId("4dd18c4ea975bf3405000000"),
-  "last_name": "Smith",
-  "location": [
-    46.27921295166,
-    6.9267511367798
-  ]
-});
-db.getCollection("users").insert({
-  "_id": ObjectId("4dd18cb4a975bfed14000000"),
-  "last_name": "Türkben",
-  "location": [
-    46.27921295166,
-    7.9267511367798
-  ]
-});
-      """
+  	
+  	// see people.json
 
     lazy val db = DB("mongola")
 
@@ -47,5 +22,13 @@ db.getCollection("users").insert({
       val result = db.users.find(Map("last_name" -> "Smith"))
       result must not be empty
     }
+    
+     "support map function on collections" in {
+      val result = db.users.find(Map("last_name" -> "Türkben"))
+     	val person = result.next
+    	val mappedList = person.addresses.map(item => item.street)
+ 	  	println(mappedList)
+ 	  	mappedList must not be empty
+    } 
   }
 }

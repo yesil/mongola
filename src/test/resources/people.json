@@ -1,0 +1,40 @@
+/** users indexes **/
+db.getCollection("users").ensureIndex({
+  "_id": 1
+},[
+  
+]);
+
+/** users records **/
+db.getCollection("users").insert({
+  "_id": ObjectId("4dd18cb4a975bfed14000000"),
+  "addresses": [
+    {
+      "street": "Edouard Herriot"
+    },
+    {
+      "street": "Rue carnot"
+    }
+  ],
+  "last_name": "Türkben",
+  "location": [
+    46.27921295166,
+    7.9267511367798
+  ]
+});
+db.getCollection("users").insert({
+  "_id": ObjectId("4dd18c4ea975bf3405000000"),
+  "addresses": [
+    {
+      "street": "Avenue Edouard Herriot"
+    },
+    {
+      "street": "Rue carnot"
+    }
+  ],
+  "last_name": "Smith",
+  "location": [
+    46.27921295166,
+    6.9267511367798
+  ]
+});
