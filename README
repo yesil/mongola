@@ -1,1 +1,3 @@
 Experimental mongodb scala query engine based on the Scala 2.9 Dynamic
+
+see: https://github.com/yesil/mongola/blob/master/src/test/scala/MongolaSpecs.scala for some examples
