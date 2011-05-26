@@ -9,14 +9,10 @@ import com.mongodb.Mongo
 
 
 trait MongolaDynamic extends Dynamic {
-  def hasNext: Boolean
-
-  def next: DBObject
-
-  def isEmpty: Boolean
 }
 
 class DB(val db: String)(val m: Mongo = new Mongo()) extends Dynamic {
+
   lazy val database = m.getDB(db)
 
   def applyDynamic(method: String)(args: Any*) =
@@ -29,38 +25,39 @@ object DB {
   def apply(db: String) = new DB(db)(new Mongo)
 }
 
-class DBCollection(val underlying: com.mongodb.DBCollection) extends Dynamic {
+class DBCollection(val underlying: com.mongodb.DBCollection) {
 
-  def applyDynamic(method: String)(args: Any*): MongolaDynamic = method match {
-    case "find" => args match {
-      case _ => new DBCursor(underlying.find())
-    }
-  }
+  def find(args: Any*) = new DBCursor(underlying.find())
+  
 }
 
-class DBCursor(val underlying: com.mongodb.DBCursor) extends Iterator[DBObject] with MongolaDynamic {
+class DBCursor(val underlying: com.mongodb.DBCursor) extends Iterator[DBObject] {
 	
-  override def hasNext = underlying.hasNext()
+	def hasNext = underlying.hasNext()
 
-  override def next = new DBObject(underlying.next())
+  def next = new DBObject(underlying.next())
 
   override def isEmpty = underlying.count() == 0
 }
 
-class DBObjectList(val underlying: java.util.Iterator[java.lang.Object]) extends Iterator[DBObject] with MongolaDynamic {
+class DBObjectList(val underlying: java.util.Iterator[java.lang.Object]) extends Iterator[DBObject] {
  
-  override def hasNext = underlying.hasNext()
+	def hasNext = underlying.hasNext()
 
-  override def next = new DBObject(underlying.next())
+	def next = new DBObject(underlying.next())
 }
 
 object dummyIterator extends java.util.Iterator[java.lang.Object]{
+
 	override def hasNext = false
+  
   override def next = Nil
+  
   override def remove = {}
 }
 
 class DBObject(val underlying: Any) extends Dynamic with Seq[DBObject]  {
+  
   override def toString = underlying.toString
 
 	override def iterator =  underlying match {
@@ -85,11 +82,19 @@ class DBObject(val underlying: Any) extends Dynamic with Seq[DBObject]  {
   }
     
   def applyDynamic(method: String)(args: Any*): DBObject = {
+  	if(!underlying.isInstanceOf[AnyRef]) return this
     underlying match {
-      case dblist: com.mongodb.BasicDBList =>   args(0) match {
-      	case i: Int => new DBObject(dblist.get(i))      
-  		}
-  		case dbobject: com.mongodb.BasicDBObject => new DBObject(dbobject.get(method))
+    	case s: String => this
+      case dbobject: com.mongodb.DBObject => 
+				val field = dbobject.get(method)
+				field match {        
+					case dblist: com.mongodb.BasicDBList =>  						
+					args.length match {
+						case  0 => new DBObject(dblist)
+						case  _ => new DBObject(dblist.get(args(0).toString))
+					}
+				case _ => new DBObject(field)
+			}
 		}
 	}
 }
