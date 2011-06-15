@@ -1,0 +1,8 @@
+<ivy-module version="1.0">
+  <info organisation="org.mongola" module="mongola" />
+  <dependencies>
+    <dependency org="org.specs2" name="specs2_2.9.0-1" rev="1.3" />
+    <dependency org="org.mongodb" name="mongo-java-driver" rev="2.5.3" />
+    <dependency org="junit" name="junit" rev="4.7" />
+  </dependencies>
+</ivy-module>

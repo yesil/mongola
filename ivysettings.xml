@@ -1,0 +1,7 @@
+<ivysettings>
+    <settings defaultResolver="central"/>
+    <resolvers>
+        <ibiblio name="central" m2compatible="true"/>
+        <ibiblio name="scalatools" root="http://scala-tools.org/repo-releases" m2compatible="true"/>
+    </resolvers>
+</ivysettings>
